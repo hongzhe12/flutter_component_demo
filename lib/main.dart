@@ -30,7 +30,7 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('自定义组件演示')),
       // 👇 在这里放你的自定义组件！
-      body: MyCustomCard(),
+      body: TodoInput(),
     );
   }
 }
@@ -38,11 +38,11 @@ class HomePage extends StatelessWidget {
 // ======================================
 // ✨ 你的自定义组件 写在这里！
 // ======================================
-class MyCustomCard extends StatelessWidget {
+class TodoInput extends StatelessWidget {
   // 1. 创建控制器
   final TextEditingController _textController = TextEditingController();
 
-  MyCustomCard({super.key});
+  TodoInput({super.key});
 
   void _onSavePressed() {
     String inputText = _textController.text;
