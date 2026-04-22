@@ -52,28 +52,30 @@ class MyCustomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 这就是你要学习编写的组件
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _textController,
-            decoration: const InputDecoration(
-              isDense: true,
-              hintText: '请输入你的想做的事情', // 提示文字
-              prefixIcon: Icon(Icons.task_alt), // 前置图标
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _textController,
+              decoration: const InputDecoration(
+                isDense: true,
+                hintText: '请输入你的想做的事情', // 提示文字
+              ),
             ),
           ),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue, // 背景颜色
-            foregroundColor: Colors.white, // 字体颜色
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue, // 背景颜色
+              foregroundColor: Colors.white, // 字体颜色
+            ),
+            onPressed: _onSavePressed,
+            child: const Text('提交'),
           ),
-          onPressed: _onSavePressed,
-          child: const Text('提交'),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
