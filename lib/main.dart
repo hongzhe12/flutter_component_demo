@@ -30,7 +30,7 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('自定义组件演示')),
       // 👇 在这里放你的自定义组件！
-      body: const MyCustomCard(),
+      body: MyCustomCard(),
     );
   }
 }
@@ -39,22 +39,41 @@ class HomePage extends StatelessWidget {
 // ✨ 你的自定义组件 写在这里！
 // ======================================
 class MyCustomCard extends StatelessWidget {
-  const MyCustomCard({super.key});
+  // 1. 创建控制器
+  final TextEditingController _textController = TextEditingController();
+
+  MyCustomCard({super.key});
+
+  void _onSavePressed() {
+    String inputText = _textController.text;
+    debugPrint('输入的内容是：$inputText');
+  }
 
   @override
   Widget build(BuildContext context) {
     // 这就是你要学习编写的组件
-    return const Center(
-      child: Card(
-        elevation: 5,
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Text(
-            '我是自定义组件！',
-            style: TextStyle(fontSize: 24),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _textController,
+            decoration: const InputDecoration(
+              isDense: true,
+              hintText: '请输入你的想做的事情', // 提示文字
+              prefixIcon: Icon(Icons.task_alt), // 前置图标
+            ),
           ),
         ),
-      ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue, // 背景颜色
+            foregroundColor: Colors.white, // 字体颜色
+          ),
+          onPressed: _onSavePressed,
+          child: const Text('提交'),
+        ),
+      ],
     );
   }
 }
