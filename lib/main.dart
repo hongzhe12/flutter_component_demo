@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '组件学习',
+      title: '待办事项',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const HomePage(),
     );
@@ -41,11 +41,53 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _editTodo(int index, String newText) {
+    setState(() {
+      _todos[index] = newText;
+    });
+  }
+
+  Future<void> _showEditDialog(int index) async {
+    final controller = TextEditingController(text: _todos[index]);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('编辑事项'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              isDense: true,
+              hintText: '请输入新的内容',
+            ),
+            onSubmitted: (_) => Navigator.of(context).pop(controller.text),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('取消'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(controller.text),
+              child: const Text('保存'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == null) return;
+    final text = result.trim();
+    if (text.isEmpty) return;
+    _editTodo(index, text);
+  }
+
   @override
   Widget build(BuildContext context) {
     // Scaffold：页面基础结构
     return Scaffold(
-      appBar: AppBar(title: const Text('自定义组件演示')),
+      appBar: AppBar(title: const Text('待办事项列表')),
       body: Column(
         children: [
           TodoInput(onSubmit: _addTodo),
@@ -53,6 +95,7 @@ class _HomePageState extends State<HomePage> {
             child: TodoList(
               todos: _todos,
               onDelete: _removeTodo,
+              onEdit: _showEditDialog,
             ),
           ),
         ],
@@ -109,10 +152,12 @@ class TodoList extends StatelessWidget {
     super.key,
     required this.todos,
     required this.onDelete,
+    required this.onEdit,
   });
 
   final List<String> todos;
   final void Function(int) onDelete;
+  final void Function(int) onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -121,9 +166,18 @@ class TodoList extends StatelessWidget {
       itemBuilder: (context, index) {
         return ListTile(
           title: Text(todos[index]),
-          trailing: IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => onDelete(index),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () => onEdit(index),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => onDelete(index),
+              ),
+            ],
           ),
         );
       },
