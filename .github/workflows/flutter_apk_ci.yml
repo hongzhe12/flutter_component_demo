@@ -1,14 +1,21 @@
-name: Build Flutter Release APK
+name: Build Flutter Multi-Platform Release
 
 on:
   push:
     branches: [todo]
+  workflow_dispatch:
+    inputs:
+      build_ios:
+        description: "Build iOS package (no code signing)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  build_android:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,6 +23,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -39,20 +52,135 @@ jobs:
           flutter pub get
           flutter build apk --release
 
-      - name: Upload APK artifacts
+      - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-apks
+          name: android-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+  build_windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.22.x"
+          channel: stable
+
+      - name: Build Windows release
+        shell: pwsh
+        run: |
+          flutter config --enable-windows-desktop
+          flutter pub get
+          flutter build windows --release
+          Compress-Archive -Path "build/windows/x64/runner/Release/*" -DestinationPath "flutter_component_demo-windows.zip" -Force
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-zip
+          path: flutter_component_demo-windows.zip
+
+  build_macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.22.x"
+          channel: stable
+
+      - name: Build macOS release
+        shell: bash
+        run: |
+          flutter config --enable-macos-desktop
+          flutter pub get
+          flutter build macos --release
+          APP_PATH=$(find build/macos/Build/Products/Release -maxdepth 1 -name "*.app" | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "No .app package found under build/macos/Build/Products/Release"
+            exit 1
+          fi
+          APP_NAME=$(basename "$APP_PATH")
+          ZIP_NAME="${APP_NAME%.app}-macos.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_NAME"
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-zip
+          path: "*-macos.zip"
+
+  build_ios:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_ios }}
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.22.x"
+          channel: stable
+
+      - name: Build iOS release (no code signing)
+        shell: bash
+        run: |
+          flutter pub get
+          flutter build ios --release --no-codesign
+          APP_PATH="build/ios/iphoneos/Runner.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "No iOS .app package found at $APP_PATH"
+            exit 1
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "Runner-ios.zip"
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-zip
+          path: Runner-ios.zip
+
+  release:
+    needs: [build_android, build_windows, build_macos, build_ios]
+    if: ${{ always() && needs.build_android.result == 'success' && needs.build_windows.result == 'success' && needs.build_macos.result == 'success' && (needs.build_ios.result == 'success' || needs.build_ios.result == 'skipped') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Show artifacts
+        run: ls -lah dist
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: apk-${{ github.run_id }}
-          name: APK Build #${{ github.run_number }}
+          tag_name: build-${{ github.run_id }}
+          name: Multi-Platform Build #${{ github.run_number }}
           body: |
-            Auto-generated release from workflow run #${{ github.run_number }}.
+            Auto-generated multi-platform release from workflow run #${{ github.run_number }}.
             Branch: ${{ github.ref_name }}
+            Includes: Android APK, Windows ZIP, macOS ZIP, iOS ZIP (if enabled)
           files: |
-            build/app/outputs/flutter-apk/app-release.apk
+            dist/*
           generate_release_notes: true
