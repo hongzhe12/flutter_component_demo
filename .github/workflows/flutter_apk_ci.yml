@@ -2,7 +2,7 @@ name: Build Flutter Release APK
 
 on:
   push:
-    branches: [main, master]
+    branches: [todo]
 
 permissions:
   contents: write
