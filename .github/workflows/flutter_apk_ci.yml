@@ -1,4 +1,4 @@
-name: Flutter APK CI
+name: Build Flutter Release APK
 
 on:
   push:
@@ -12,23 +12,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Flutter
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.22.x"
           channel: stable
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Decode keystore
+        run: |
+          # 直接硬编码 Base64 字符串
+          echo "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" | base64 --decode > android/upload-keystore.jks
 
-      - name: Build Debug APK
-        run: flutter build apk --debug
+          # 直接硬编码密码和别名
+          echo "storePassword=123456" > android/key.properties
+          echo "keyPassword=123456" >> android/key.properties
+          echo "keyAlias=my-key-alias" >> android/key.properties
+          echo "storeFile=upload-keystore.jks" >> android/key.properties
 
-      - name: Upload APK
+      - name: Build release APK
+        run: |
+          flutter pub get
+          flutter build apk --release
+
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: release-apks
+          path: build/app/outputs/flutter-apk/app-release.apk
