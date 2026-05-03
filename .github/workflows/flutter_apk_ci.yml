@@ -44,3 +44,15 @@ jobs:
         with:
           name: release-apks
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_id }}
+          name: APK Build #${{ github.run_number }}
+          body: |
+            Auto-generated release from workflow run #${{ github.run_number }}.
+            Branch: ${{ github.ref_name }}
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+          generate_release_notes: true
