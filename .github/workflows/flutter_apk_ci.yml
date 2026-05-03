@@ -50,6 +50,7 @@ jobs:
       - name: Build release APK
         run: |
           flutter pub get
+          dart run flutter_launcher_icons
           flutter build apk --release
 
       - name: Upload Android APK artifact
@@ -78,6 +79,7 @@ jobs:
         run: |
           flutter config --enable-windows-desktop
           flutter pub get
+          dart run flutter_launcher_icons
           flutter build windows --release
           Compress-Archive -Path "build/windows/x64/runner/Release/*" -DestinationPath "flutter_component_demo-windows.zip" -Force
 
@@ -107,6 +109,7 @@ jobs:
         run: |
           flutter config --enable-macos-desktop
           flutter pub get
+          dart run flutter_launcher_icons
           flutter build macos --release
           APP_PATH=$(find build/macos/Build/Products/Release -maxdepth 1 -name "*.app" | head -n 1)
           if [ -z "$APP_PATH" ]; then
@@ -143,6 +146,7 @@ jobs:
         shell: bash
         run: |
           flutter pub get
+          dart run flutter_launcher_icons
           flutter build ios --release --no-codesign
           APP_PATH="build/ios/iphoneos/Runner.app"
           if [ ! -d "$APP_PATH" ]; then
