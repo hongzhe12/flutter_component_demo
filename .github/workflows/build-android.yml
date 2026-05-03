@@ -1,10 +1,9 @@
-name: Build Flutter Release APK
+name: Flutter APK CI
 
 on:
   push:
     branches: [main, master]
 
-# 关键：授予创建 Release 和上传附件的权限
 permissions:
   contents: write
 
@@ -13,35 +12,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Set up Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.22.x"
           channel: stable
-          cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Decode keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/upload-keystore.jks
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-          echo "storeFile=../upload-keystore.jks" >> android/key.properties
+      - name: Build Debug APK
+        run: flutter build apk --debug
 
-      - name: Build release APK
-        run: flutter build apk --release
-
-      - name: Upload APK artifacts (workflow run)
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: release-apks
-          path: build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 30
+          name: debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
