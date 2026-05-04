@@ -2,7 +2,7 @@ name: Build Flutter Multi-Platform Release
 
 on:
   push:
-    branches: [todo]
+    branches: [main]
   workflow_dispatch:
     inputs:
       build_ios:
